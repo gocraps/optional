@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/subhadippramanik/go-optional.git/pkg/optional"
+	"github.com/gocraps/optional.git/pkg/optional"
 )
 
 func main() {
