@@ -2,112 +2,416 @@ package optional
 
 import (
 	"errors"
-	"math/rand"
-	"testing"
-
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
-func TestUnit_GivenNoObjectPresent_WhenNewExecuted_ThenEmptyObjectCreated(t *testing.T) {
+func TestUnit_Of_WHEN_NonNilValue_THEN_ReturnsOptional(t *testing.T) {
 	//act
-	op := New()
+	op, err := Of(10)
+
+	//assert
+	assert.NoError(t, err)
+	assert.Equal(t, 10, op.value)
+}
+
+func TestUnit_Of_WHEN_NilValue_THEN_ReturnsError(t *testing.T) {
+	//act
+	op, err := Of(nil)
+
+	//assert
+	assert.Error(t, err)
+	assert.Nil(t, op)
+}
+
+func TestUnit_OfNillable_WHEN_NonNilValue_THEN_ReturnsOptional(t *testing.T) {
+	//act
+	op := OfNillable(10)
 
 	//assert
 	assert.NotNil(t, op)
-	assert.Empty(t, op)
+	assert.Equal(t, 10, op.value)
 }
 
-func TestUnit_GivenSomeValue_WhenSetExecuted_ThenValueAndErrorNotNil(t *testing.T) {
-	//arrange
-	op := New()
-	value := "Hello GoCrapes"
-	err := errors.New("Do not scare")
-
+func TestUnit_OfNillable_WHEN_NilValue_THEN_ReturnsOptional(t *testing.T) {
 	//act
-	op.Set(value, err)
+	op := OfNillable(nil)
 
 	//assert
-	assert.NotNil(t, op.value)
-	assert.NotNil(t, op.Error)
+	assert.NotNil(t, op)
+	assert.Nil(t, op.value)
 }
 
-func TestUnit_GivenTypeInt_WhenValueSet_ThenGetReturnsIntValue(t *testing.T) {
-	//arrange
-	randomInt := rand.Intn(100)
-
+func TestUnit_Empty_THEN_ReturnsOptional(t *testing.T) {
 	//act
-	op := Optional{randomInt, nil}
+	op := Empty()
 
 	//assert
-	assert.Equal(t, randomInt, op.Get())
+	assert.NotNil(t, op)
+	assert.Nil(t, op.value)
 }
 
-func TestUnit_GivenTypeString_WhenValueSet_ThenGetReturnsStringValue(t *testing.T) {
+func TestUnit_Get_WHEN_NonNilValue_THEN_ReturnsValue(t *testing.T) {
 	//arrange
-	aStrignValue := "This is a string"
+	op := Optional{
+		value: 10,
+	}
 
 	//act
-	op := Optional{aStrignValue, nil}
+	val, err := op.Get()
 
 	//assert
-	assert.Equal(t, aStrignValue, op.Get())
+	assert.NoError(t, err)
+	assert.Equal(t, 10, val)
 }
 
-func TestUnit_GivenNoValue_WhenNoDeafult_ThenGetReturnsNil(t *testing.T) {
+func TestUnit_Get_WHEN_NilValue_THEN_ReturnsError(t *testing.T) {
+	//arrange
+	op := Optional{
+		value: nil,
+	}
+
 	//act
-	op := New()
+	val, err := op.Get()
 
 	//assert
-	assert.Nil(t, op.Get())
+	assert.Error(t, err)
+	assert.Nil(t, val)
 }
 
-func TestUnit_GivenNoValuePresent_WhenDefaultValuePassed_ThenGetOrDefaultReturnsDefault(t *testing.T) {
+func TestUnit_IsPresent_WHEN_NilValue_THEN_ReturnsFalse(t *testing.T) {
 	//arrange
-	deafultValue := "GoCraps"
+	op := Optional{
+		value: nil,
+	}
+
 	//act
-	op := Optional{}
+	val := op.IsPresent()
 
 	//assert
-	assert.Equal(t, deafultValue, op.GetOrDefault(deafultValue))
+	assert.False(t, val)
 }
 
-func TestUnit_GivenValuePresent_WhenDefaultValuePassed_ThenGetOrDefaultReturnsValue(t *testing.T) {
+func TestUnit_IsPresent_WHEN_NonNilValue_THEN_ReturnsTrue(t *testing.T) {
 	//arrange
-	deafultValue := "GoCraps"
-	value := "Optional"
+	op := Optional{
+		value: "abcd",
+	}
+
 	//act
-	op := Optional{value, nil}
+	val := op.IsPresent()
 
 	//assert
-	assert.Equal(t, value, op.GetOrDefault(deafultValue))
+	assert.True(t, val)
 }
 
-func TestUnit_GivenNoValuePresent_WhenFunctionPassed_ThenGetOrExecuteRunsFunction(t *testing.T) {
+func TestUnit_IfPresent_WHEN_NonNilValue_THEN_ExecuteFunctionAndReturnNoError(t *testing.T) {
 	//arrange
-	var someString string
-	expected := "Hello GoCraps"
-	op := New()
+	op := Optional{
+		value: "abcd",
+	}
 
 	//act
-	op.GetOrExecute(func(op Optional) {
-		someString = expected
+	err := op.IfPresent(func(val interface{}) error {
+		return nil
 	})
 
 	//assert
-	assert.Equal(t, expected, someString)
+	assert.NoError(t, err)
 }
 
-func TestUnit_GivenValuePresent_WhenFunctionPassed_ThenGetOrExecuteReturnsValue(t *testing.T) {
+func TestUnit_IfPresent_WHEN_NilValue_THEN_ExecuteFunctionAndReturnNoError(t *testing.T) {
 	//arrange
-	someString := "Initial"
-	expected := "Hello GoCraps"
-	op := Optional{expected, nil}
+	op := Optional{
+		value: nil,
+	}
 
 	//act
-	op.GetOrExecute(func(op Optional) {
-		someString = expected
+	err := op.IfPresent(func(val interface{}) error {
+		return nil
 	})
 
 	//assert
-	assert.NotEqual(t, expected, someString)
+	assert.NoError(t, err)
+}
+
+func TestUnit_IfPresent_WHEN_NonNilValueAndNilFunction_THEN_ReturnsError(t *testing.T) {
+	//arrange
+	op := Optional{
+		value: "abcd",
+	}
+
+	//act
+	err := op.IfPresent(nil)
+
+	//assert
+	assert.Error(t, err)
+}
+func TestUnit_IfPresent_WHEN_NilValueAndNilFUnction_THEN_ReturnNoError(t *testing.T) {
+	//arrange
+	op := Optional{
+		value: nil,
+	}
+
+	//act
+	err := op.IfPresent(nil)
+
+	//assert
+	assert.NoError(t, err)
+}
+
+func TestUnit_Filter_WHEN_NilFunction_THEN_ReturnError(t *testing.T) {
+	//arrange
+	op := Optional{
+		value: "abcd",
+	}
+
+	//act
+	val, err := op.Filter(nil)
+
+	//assert
+	assert.Error(t, err)
+	assert.Nil(t, val)
+}
+
+func TestUnit_Filter_WHEN_NilValueAndNonNilFunction_THEN_ReturnEmpty(t *testing.T) {
+	//arrange
+	op := Optional{
+		value: nil,
+	}
+
+	//act
+	val, err := op.Filter(func(obj interface{}) bool {
+		return true
+	})
+
+	//assert
+	assert.NoError(t, err)
+	assert.Equal(t, &Optional{
+		value: nil,
+	}, val)
+}
+
+func TestUnit_Filter_WHEN_NonNilValueAndNonNilFunctionAndFunctionReturnsFalse_THEN_ReturnEmpty(t *testing.T) {
+	//arrange
+	op := Optional{
+		value: "abcd",
+	}
+
+	//act
+	val, err := op.Filter(func(obj interface{}) bool {
+		return false
+	})
+
+	//assert
+	assert.NoError(t, err)
+	assert.Equal(t, &Optional{
+		value: nil,
+	}, val)
+}
+
+func TestUnit_Filter_WHEN_NonNilValueAndNonNilFunctionAndFunctionReturnsTrue_THEN_ReturnsOptional(t *testing.T) {
+	//arrange
+	op := Optional{
+		value: "abcd",
+	}
+
+	//act
+	val, err := op.Filter(func(obj interface{}) bool {
+		return true
+	})
+
+	//assert
+	assert.NoError(t, err)
+	assert.Equal(t, &Optional{
+		value: "abcd",
+	}, val)
+}
+
+func TestUnit_Map_WHEN_NilFunction_THEN_ReturnError(t *testing.T) {
+	//arrange
+	op := Optional{
+		value: "abcd",
+	}
+
+	//act
+	val, err := op.Map(nil)
+
+	//assert
+	assert.Error(t, err)
+	assert.Nil(t, val)
+}
+
+func TestUnit_Map_WHEN_NilValueAndNonNilFunction_THEN_ReturnEmpty(t *testing.T) {
+	//arrange
+	op := Optional{
+		value: nil,
+	}
+
+	//act
+	val, err := op.Map(func(obj interface{}) interface{} {
+		return true
+	})
+
+	//assert
+	assert.NoError(t, err)
+	assert.Equal(t, &Optional{
+		value: nil,
+	}, val)
+}
+
+func TestUnit_Map_WHEN_NonNilValueAndNonNilFunctionAndFunctionReturnsNil_THEN_ReturnEmpty(t *testing.T) {
+	//arrange
+	op := Optional{
+		value: "abcd",
+	}
+
+	//act
+	val, err := op.Map(func(obj interface{}) interface{} {
+		return nil
+	})
+
+	//assert
+	assert.NoError(t, err)
+	assert.Equal(t, &Optional{
+		value: nil,
+	}, val)
+}
+
+func TestUnit_Map_WHEN_NonNilValueAndNonNilFunctionAndFunctionReturnsValue_THEN_ReturnsOptional(t *testing.T) {
+	//arrange
+	op := Optional{
+		value: "abcd",
+	}
+
+	//act
+	val, err := op.Map(func(obj interface{}) interface{} {
+		return 10
+	})
+
+	//assert
+	assert.NoError(t, err)
+	assert.Equal(t, &Optional{
+		value: 10,
+	}, val)
+}
+
+func TestUnit_OrElse_WHEN_NonNilValue_THEN_ReturnsOrignialValue(t *testing.T) {
+	//arrange
+	op := Optional{
+		value: "abcd",
+	}
+
+	//act
+	val := op.OrElse(10)
+
+	//assert
+	assert.Equal(t, "abcd", val)
+}
+
+func TestUnit_OrElse_WHEN_NilValue_THEN_ReturnsElseValue(t *testing.T) {
+	//arrange
+	op := Optional{
+		value: nil,
+	}
+
+	//act
+	val := op.OrElse(10)
+
+	//assert
+	assert.Equal(t, 10, val)
+}
+
+func TestUnit_OrElseGet_WHEN_NonNilValue_THEN_ReturnsOriginalValue(t *testing.T) {
+	//arrange
+	op := Optional{
+		value: "abcd",
+	}
+
+	//act
+	val, err := op.OrElseGet(func() interface{} {
+		return 10
+	})
+
+	//assert
+	assert.NoError(t, err)
+	assert.Equal(t, "abcd", val)
+}
+
+func TestUnit_OrElseGet_WHEN_NilValueAndNilFunction_THEN_ReturnsError(t *testing.T) {
+	//arrange
+	op := Optional{
+		value: nil,
+	}
+
+	//act
+	val, err := op.OrElseGet(nil)
+
+	//assert
+	assert.Error(t, err)
+	assert.Nil(t, val)
+}
+
+func TestUnit_OrElseGet_WHEN_NilValue_THEN_ReturnsValueReturnedByFunction(t *testing.T) {
+	//arrange
+	op := Optional{
+		value: nil,
+	}
+
+	//act
+	val, err := op.OrElseGet(func() interface{} {
+		return 10
+	})
+
+	//assert
+	assert.NoError(t, err)
+	assert.Equal(t, 10, val)
+}
+
+func TestUnit_OrElseThrow_WHEN_NonNilValue_THEN_ReturnsOriginalValue(t *testing.T) {
+	//arrange
+	op := Optional{
+		value: "abcd",
+	}
+
+	//act
+	val, err := op.OrElseThrow(func() error {
+		return errors.New("New Error")
+	})
+
+	//assert
+	assert.NoError(t, err)
+	assert.Equal(t, "abcd", val)
+}
+
+func TestUnit_OrElseThrow_WHEN_NilValueAndNilFunction_THEN_ReturnsError(t *testing.T) {
+	//arrange
+	op := Optional{
+		value: nil,
+	}
+
+	//act
+	val, err := op.OrElseThrow(nil)
+
+	//assert
+	assert.Error(t, err)
+	assert.Equal(t, "'fn' cannot be nil", err.Error())
+	assert.Nil(t, val)
+}
+
+func TestUnit_OrElseThrow_WHEN_NilValueAndNonNillErrorFunction_THEN_ReturnsErrorReturnedByFunction(t *testing.T) {
+	//arrange
+	op := Optional{
+		value: nil,
+	}
+
+	//act
+	val, err := op.OrElseThrow(func() error {
+		return errors.New("New Error")
+	})
+
+	//assert
+	assert.Error(t, err)
+	assert.Equal(t, "New Error", err.Error())
+	assert.Nil(t, val)
 }
