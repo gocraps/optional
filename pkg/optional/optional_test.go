@@ -399,7 +399,7 @@ func TestUnit_OrElseThrow_WHEN_NilValueAndNilFunction_THEN_ReturnsError(t *testi
 	assert.Nil(t, val)
 }
 
-func TestUnit_OrElseGet_WHEN_NilValueAndNonNillErrorFunction_THEN_ReturnsErrorReturnedByFunction(t *testing.T) {
+func TestUnit_OrElseThrow_WHEN_NilValueAndNonNillErrorFunction_THEN_ReturnsErrorReturnedByFunction(t *testing.T) {
 	//arrange
 	op := Optional{
 		value: nil,
