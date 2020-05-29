@@ -17,7 +17,7 @@ func (optional *Optional) Set(value interface{}, err error) {
 }
 
 func (optional Optional) Get() interface{} {
-	if optional.Error != nil {
+	if optional.Error != nil || optional.value == nil {
 		return nil
 	}
 	return optional.value
